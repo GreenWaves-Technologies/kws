@@ -79,13 +79,10 @@ GAP_FLAGS += -O3 -s -mno-memcpy -fno-tree-loop-distribute-patterns
 GAP_FLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD)
 GAP_FLAGS += -DPERF
 
-ifeq ($(platform),gvsoc)
-  $(info Platform is GVSOC)
-  override runner_args += --config-opt=flash/fs/files=$(realpath $(MODEL_TENSORS))
-else
-  $(info Platform is GAPUINO)
-  PLPBRIDGE_FLAGS = -f $(MODEL_TENSORS)
-endif
+
+READFS_FILES=$(realpath $(MODEL_TENSORS))
+PLPBRIDGE_FLAGS = -f
+
 
 ifdef NO_IMAGE
   GAP_FLAGS += -DNO_IMAGE
