@@ -73,10 +73,10 @@ pulpChip = GAP
 PULP_APP = kws2
 USE_PMSIS_BSP=1
 
-PULP_APP_SRCS += kws.c ImgIO.c $(MODEL_SRCS) MFCC_Dump.c ./model/layers.c 
+PULP_APP_SRCS += kws.c ImgIO.c $(MODEL_SRCS) $(MODEL_LIB_POW2) MFCC_Dump.c ./model/layers.c 
 
 GAP_FLAGS += -O3 -s -mno-memcpy -fno-tree-loop-distribute-patterns 
-GAP_FLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD)
+GAP_FLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD) $(MODEL_LIB_INCLUDE_POW2)
 GAP_FLAGS += -DPERF
 
 

@@ -26,9 +26,7 @@ int kwsCNN_layers(
 		(short int *__restrict__) Input_1, /* In */
 		(short int *__restrict__) (kws_L2_Memory + 146816), /* Filter */
 		(short int *__restrict__) (kws_L2_Memory + 157056), /* Bias */
-		(short int *__restrict__) (kws_L2_Memory + 24960), /* Out */
-		14, /* Norm */
-		14 /* NormBias */
+		(short int *__restrict__) (kws_L2_Memory + 24960) /* Out */
 	);
 	kwsPerf[0] = gap_cl_readhwtimer() - kwsPerf[0];
 	kwsPerf[1] = gap_cl_readhwtimer();
@@ -43,9 +41,7 @@ int kwsCNN_layers(
 		(short int *__restrict__) (kws_L2_Memory + 24960), /* In */
 		(short int *__restrict__) (kws_L2_Memory + 64896), /* Filter */
 		(short int *__restrict__) (kws_L2_Memory + 157120), /* Bias */
-		(short int *__restrict__) (kws_L2_Memory + 0), /* Out */
-		14, /* Norm */
-		14 /* NormBias */
+		(short int *__restrict__) (kws_L2_Memory + 0) /* Out */
 	);
 	kwsPerf[1] = gap_cl_readhwtimer() - kwsPerf[1];
 	kwsPerf[2] = gap_cl_readhwtimer();
@@ -57,9 +53,7 @@ int kwsCNN_layers(
 		(short int *__restrict__) (kws_L2_Memory+0), /* In */
 		(short int *__restrict__) (kws_L3_Memory+0), /* Filter */
 		(short int *__restrict__) (kws_L2_Memory+157184), /* Bias */
-		(short int *__restrict__) Output_1, /* Out */
-		13, /* Norm */
-		13 /* NormBias */
+		(short int *__restrict__) Output_1 /* Out */
 	);
 	kwsPerf[2] = gap_cl_readhwtimer() - kwsPerf[2];
 	DumpShortInt("output layer", (short int*)(Output_1), 12, 1, 0, 0 );
