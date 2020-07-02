@@ -17,7 +17,6 @@ io=host
 
 LINK_IMAGE=images/features_0_1.pgm
 
-
 $(info Building GAP8 mode with $(KWS_BITS) bit quantization)
 
 # For debugging don't load an image
@@ -56,7 +55,7 @@ endif
 # Here we set the memory allocation for the generated kernels
 # REMEMBER THAT THE L1 MEMORY ALLOCATION MUST INCLUDE SPACE
 # FOR ALLOCATED STACKS!
-MODEL_L1_MEMORY=52000
+MODEL_L1_MEMORY=48000
 MODEL_L2_MEMORY=307200
 MODEL_L3_MEMORY=8388608
 # hram - HyperBus RAM

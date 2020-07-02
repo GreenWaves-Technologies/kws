@@ -93,14 +93,6 @@ void test_kws(void)
     unsigned int Wi = 0, Hi = 0;
     /* Input image size. */
     unsigned int W = 40, H = 98;
-    #if !defined(__EMUL__)
-    #if !defined(NO_IMAGE) && !defined(LINK_IMAGE_HEADER)
-    BRIDGE_Init();
-    printf("Connecting to bridge !\n");
-    BRIDGE_Connect(1, NULL);
-    printf("Connected to bridge !\n");
-    #endif  /* NO_IMAGE && LINK_IMAGE_HEADER */
-    #endif  /* __EMUL__ */
 
 #if 0
     unsigned char *ImageInChar = (unsigned char *) pi_l2_malloc(sizeof(KWS_IMAGE_IN_T) * W * H);
@@ -215,13 +207,8 @@ void test_kws(void)
 
     #if defined(__EMUL__)
     dt_close_dump_file();
-    #else
-    #if !defined(NO_IMAGE) && !defined(LINK_IMAGE_HEADER)
-    BRIDGE_Disconnect(NULL);
-    #endif  /* NO_IMAGE && LINK_IMAGE_HEADER */
     #endif  /* __EMUL__ */
-
-    
+ 
     printf("Ended\n");
 
     int status=-1;
