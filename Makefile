@@ -15,8 +15,6 @@ endif
 
 io=host
 
-LINK_IMAGE=images/features_0_1.pgm
-
 $(info Building GAP8 mode with $(KWS_BITS) bit quantization)
 
 # For debugging don't load an image
@@ -44,14 +42,6 @@ endif
 
 include model_decl.mk
 
-ifdef LINK_IMAGE
-  LINK_IMAGE_HEADER=$(MODEL_BUILD)/image.h
-  LINK_IMAGE_NAME=$(subst .,_,$(subst /,_,$(LINK_IMAGE)))
-  GAP_FLAGS += -DLINK_IMAGE_HEADER="\"$(LINK_IMAGE_HEADER)\"" -DLINK_IMAGE_NAME="$(LINK_IMAGE_NAME)"
-else
-  LINK_IMAGE_HEADER=
-endif
-
 # Here we set the memory allocation for the generated kernels
 # REMEMBER THAT THE L1 MEMORY ALLOCATION MUST INCLUDE SPACE
 # FOR ALLOCATED STACKS!
@@ -72,35 +62,20 @@ pulpChip = GAP
 PULP_APP = kws2
 USE_PMSIS_BSP=1
 
-PULP_APP_SRCS += kws.c ImgIO.c $(MODEL_SRCS) $(MODEL_LIB_POW2) MFCC_Dump.c ./model/layers.c 
+PULP_APP_SRCS += kws.c $(MODEL_SRCS) $(MODEL_LIB_POW2) 
+#MFCC_Dump.c ./model/layers.c 
 
 GAP_FLAGS += -O3 -s -mno-memcpy -fno-tree-loop-distribute-patterns 
 GAP_FLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD) $(MODEL_LIB_INCLUDE_POW2)
-GAP_FLAGS += -DPERF
+#GAP_FLAGS += -DPERF
 
+APP_LDFLAGS +=  -lgaplib
 
 READFS_FILES=$(realpath $(MODEL_TENSORS))
 PLPBRIDGE_FLAGS = -f
 
-
-ifdef NO_IMAGE
-  GAP_FLAGS += -DNO_IMAGE
-else
-  ifndef LINK_IMAGE
-    PLPBRIDGE_FLAGS += -fileIO 15
-  endif
-endif
-
-ifdef LINK_IMAGE
 # all depends on the model and the image header
-all:: model $(LINK_IMAGE_HEADER)
-
-$(LINK_IMAGE_HEADER): $(LINK_IMAGE)
-	xxd -i $< $@
-else
-# all depends on the model
-all:: model
-endif
+all:: model 
 
 clean:: clean_model
 

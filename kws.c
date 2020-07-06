@@ -7,69 +7,76 @@
  *
  */
 
-#ifndef __EMUL__
-/* PMSIS includes. */
 #include "pmsis.h"
-#endif  /* __EMUL__ */
 
 /* Autotiler includes. */
 #include "Gap.h"
 #include "kwsKernels.h"
-#include "ImgIO.h"
+#include "gaplib/ImgIO.h"
 
-#if defined(__PULP_OS__)
-#include "bridge_stubs.h"
-#endif  /* __PULP_OS__ */
-
-#ifdef __EMUL__
-#define pmsis_exit exit
-#ifdef PERF
-#undef PERF
-#endif
-#endif
-
-L2_MEM short int in_img_txt[] = { 
-#include "./in_feat.txt"
-  };
-  
-#define STACK_SIZE      1024
+#define STACK_SIZE      2048
 
 AT_HYPERFLASH_FS_EXT_ADDR_TYPE kws_L3_Flash = 0;
 
-#ifdef __EMUL__
-  #include <sys/types.h>
-  #include <unistd.h>
-  #include <sys/stat.h>
-  #include <fcntl.h>
-  #include <sys/param.h>
-  #include <string.h>
-  #ifndef TENSOR_DUMP_FILE
-    #define TENSOR_DUMP_FILE "tensor_dump_file.dat"
-  #endif
-#endif
-
 // Softmax always outputs Q15 short int even from 8 bit input
 L2_MEM short int *ResOut;
-//#ifdef KWS_16BIT
-  typedef short int KWS_IMAGE_IN_T;
-/*
-#else
-  #ifdef KWS_8BIT
-  typedef signed char KWS_IMAGE_IN_T;
-  #endif
-#endif
-*/
+typedef short int KWS_IMAGE_IN_T;
+L2_MEM KWS_IMAGE_IN_T* ImageIn;
 
-//L2_MEM KWS_IMAGE_IN_T *ImageIn;
-L2_MEM KWS_IMAGE_IN_T ImageIn[] = { 
-#include "./in_feat.txt"
-  };
-  
-char *ImageName = NULL;
+char labels[][20]={
+    "_silence_",
+    "_unknown_",
+    "yes",
+    "no",
+    "up",
+    "down",
+    "left",
+    "right",
+    "on",
+    "off",
+    "stop",
+    "go"
+};
 
-int kwsCNN_layers(
-		short int *__restrict__ Input_1,
-		short int *__restrict__ Output_1);
+int read_raw_image(char* filename, uint16_t* buffer,int w,int h){
+    struct pi_fs_conf conf;
+    static struct pi_device fs;
+    static pi_fs_file_t *file;
+    unsigned int ReadSize=0;
+
+    pi_fs_conf_init(&conf);
+    conf.type = PI_FS_HOST;
+    pi_open_from_conf(&fs, &conf);
+    
+    if (pi_fs_mount(&fs))
+        return -2;
+
+    file = pi_fs_open(&fs, filename, PI_FS_FLAGS_READ);
+    if (file == NULL) return -3;
+
+
+    {
+        char *TargetImg = buffer;
+        unsigned int RemainSize = w*h*sizeof(uint16_t);
+        
+        while (RemainSize > 0)
+        {
+            unsigned int Chunk = Min(4096, RemainSize);
+            unsigned R = pi_fs_read(file,TargetImg, Chunk);
+            ReadSize+=R;
+            if (R!=Chunk) break;
+            TargetImg += Chunk; RemainSize -= Chunk;
+        }
+    }
+
+    pi_fs_close(file);
+    pi_fs_unmount(&fs);
+    
+    printf("Image %s, [W: %d, H: %d], Gray, Size: %d bytes, Loaded sucessfully\n", filename, w, h, ReadSize);
+
+    return 0;
+
+}
 
 
 static void Runkws()
@@ -80,7 +87,7 @@ static void Runkws()
   gap_cl_starttimer();
   gap_cl_resethwtimer();
 #endif
-  kwsCNN_layers(ImageIn, ResOut);
+  kwsCNN(ImageIn, ResOut);
   printf("Runner completed\n");
 
 
@@ -88,47 +95,31 @@ static void Runkws()
 
 void test_kws(void)
 {
+    char *ImageName = "../../../images/go.pgm";
+
     printf("Entering main controller\n");
 
     unsigned int Wi = 0, Hi = 0;
     /* Input image size. */
     unsigned int W = 40, H = 98;
 
-#if 0
-    unsigned char *ImageInChar = (unsigned char *) pi_l2_malloc(sizeof(KWS_IMAGE_IN_T) * W * H);
-    printf("=====>imageinchar %p\n",ImageInChar);
-    if (ImageInChar == NULL)
+
+    ImageIn = (unsigned char *) pi_l2_malloc(sizeof(KWS_IMAGE_IN_T) * W * H);
+    printf("=====>imageinchar %p\n",ImageIn);
+    if (ImageIn == NULL)
     {
         printf("Failed to allocate Memory for Image (%d bytes)\n", sizeof(KWS_IMAGE_IN_T) * W * H);
         pmsis_exit(-1);
     }
 
-    #if !defined(NO_IMAGE)
     printf("Reading image\n");
-    //Reading Image from Bridge
-    if ((ReadImageFromFile(ImageName, &Wi, &Hi, ImageInChar, W*H*sizeof(short int))==0) || (Wi!=W) || (Hi!=H))
-    {
-        printf("Failed to load image %s or dimension mismatch Expects [%dx%d], Got [%dx%d]\n", ImageName, W, H, Wi, Hi);
+    if (read_raw_image(ImageName, ImageIn, W, H)) {
+        printf("Failed to load image %s\n", ImageName);
         pmsis_exit(-2);
     }
+
     printf("Finished reading image\n");
-    #endif  /* NO_IMAGE */
 
-    //#if defined(PRINT_IMAGE)
-    for (int i=0; i<H; i++)
-    {
-      printf("%d:\t",i*W);
-        for (int j=0; j<W; j++)
-        {
-	  printf("%04d, ", ((short int*)ImageInChar)[W*i + j]<<6);
-        }
-        printf("\n");
-    }
-    //#endif  /* PRINT_IMAGE */
-
-
-    ImageIn = (KWS_IMAGE_IN_T *) ImageInChar;
-#endif
 
     ResOut = (short int *) pi_l2_malloc(12 * sizeof(short int));
     if (ResOut == NULL)
@@ -138,12 +129,10 @@ void test_kws(void)
     }
  
     
-    #if !defined(__EMUL__)
     /* Configure And open cluster. */
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
     cl_conf.id = 0;
-    #endif  /* __EMUL__ */
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
     {
@@ -167,25 +156,27 @@ void test_kws(void)
 
     pi_cluster_send_task_to_cl(&cluster_dev, &task);
 
-#ifndef NO_IMAGE
-  //Checki Results
+    printf("Closing Cluster\n");
+    kwsCNN_Destruct();
+    // Close the cluster
+    pi_cluster_close(&cluster_dev);
+
+    //Checki Results
     int rec_digit = -1;
-    short int highest = ResOut[0];
+    short int highest = 0x80000000;
     for(int i = 0; i < 12; i++) {
-      if(ResOut[i] > highest) {
-	highest = ResOut[i];
-	rec_digit = i;
-      }
+        printf("%d ",ResOut[i]);
+        if(ResOut[i] > highest) {
+	       highest = ResOut[i];
+	       rec_digit = i;
+        }
     }
     printf("\n");
 
-    printf("Recognized: %d\n", rec_digit);
-#else
-    printf("image loading disabled so no sensible result\n");
-#endif
+    printf("Recognized: %s\n", labels[rec_digit]);
 
 	 
-    kwsCNN_Destruct();
+    
 
     #if defined(PERF)
     {
@@ -201,13 +192,6 @@ void test_kws(void)
         printf("\n");
     }
     #endif  /* PERF */
-
-    // Close the cluster
-    pi_cluster_close(&cluster_dev);
-
-    #if defined(__EMUL__)
-    dt_close_dump_file();
-    #endif  /* __EMUL__ */
  
     printf("Ended\n");
 
@@ -217,34 +201,8 @@ void test_kws(void)
     pmsis_exit(status);
 }
 
-#if defined(__EMUL__) && !defined(LINK_IMAGE_HEADER)
-int main(int argc, char *argv[])
-{
-    if (argc < 2)
-    {
-        printf("Usage: kws [image_file]\n");
-        exit(-1);
-    }
-    ImageName = argv[1];
-    if (dt_open_dump_file(TENSOR_DUMP_FILE))
-    {
-        printf("Failed to open tensor dump file %s.\n", TENSOR_DUMP_FILE);
-        exit(-2);
-    }
-    printf("\n\n\t *** NNTOOL KWS Example ***\n\n");
-    test_kws();
-}
-#else
 int main()
 {
-    #if defined(LINK_IMAGE_NAME)
-    #define __STRING1(__s) #__s
-  //    #define __STRING(__s) __STRING1(__s)
-    ImageName = __STRING(LINK_IMAGE_NAME);
-    #else
-    ImageName = "../../../images/feature_0_1.pgm";
-    #endif  /* LINK_IMAGE_NAME */
     printf("\n\n\t *** NNTOOL KWS Example ***\n\n");
     return pmsis_kickoff((void *) test_kws);
 }
-#endif  /* (__EMUL__) && (LINK_IMAGE_HEADER) */
