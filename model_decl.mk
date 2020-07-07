@@ -62,19 +62,6 @@ RM=rm -f
 
 NNTOOL=nntool
 
-# Here we set the memory allocation for the generated kernels
-# REMEMBER THAT THE L1 MEMORY ALLOCATION MUST INCLUDE SPACE
-# FOR ALLOCATED STACKS!
-MODEL_L1_MEMORY=52000
-MODEL_L2_MEMORY=307200
-MODEL_L3_MEMORY=8388608
-# hram - HyperBus RAM
-# qspiram - Quad SPI RAM
-MODEL_L3_EXEC=hram
-# hflash - HyperBus Flash
-# qpsiflash - Quad SPI Flash
-MODEL_L3_CONST=hflash
-
 MODEL_SRCS += $(MODEL_GEN_C)
 
 MODEL_LIB_POW2 += $(TILER_CNN_KERNEL_PATH)/CNN_BiasReLULinear_BasicKernels.c

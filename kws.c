@@ -15,13 +15,13 @@
 #include "gaplib/ImgIO.h"
 
 #define STACK_SIZE      2048
-
+#define SLAVE_STACK_SIZE 1024
 AT_HYPERFLASH_FS_EXT_ADDR_TYPE kws_L3_Flash = 0;
 
 // Softmax always outputs Q15 short int even from 8 bit input
-L2_MEM short int *ResOut;
+PI_L2 short int *ResOut;
 typedef short int KWS_IMAGE_IN_T;
-L2_MEM KWS_IMAGE_IN_T* ImageIn;
+PI_L2 short int* ImageIn;
 
 char labels[][20]={
     "_silence_",
@@ -38,7 +38,7 @@ char labels[][20]={
     "go"
 };
 
-int read_raw_image(char* filename, uint16_t* buffer,int w,int h){
+int read_raw_image(char* filename, int16_t* buffer,int w,int h){
     struct pi_fs_conf conf;
     static struct pi_device fs;
     static pi_fs_file_t *file;
@@ -95,7 +95,7 @@ static void Runkws()
 
 void test_kws(void)
 {
-    char *ImageName = "../../../images/go.pgm";
+    char *ImageName = "../../../images/up.dat";
 
     printf("Entering main controller\n");
 
@@ -104,8 +104,8 @@ void test_kws(void)
     unsigned int W = 40, H = 98;
 
 
-    ImageIn = (unsigned char *) pi_l2_malloc(sizeof(KWS_IMAGE_IN_T) * W * H);
-    printf("=====>imageinchar %p\n",ImageIn);
+    ImageIn = (short int *) pi_l2_malloc(sizeof(KWS_IMAGE_IN_T) * W * H);
+    printf("=====>imagein %p\n",ImageIn);
     if (ImageIn == NULL)
     {
         printf("Failed to allocate Memory for Image (%d bytes)\n", sizeof(KWS_IMAGE_IN_T) * W * H);
@@ -119,6 +119,11 @@ void test_kws(void)
     }
 
     printf("Finished reading image\n");
+/*
+    for(int i=0;i<W*H;i++)
+        ImageIn[i] = ImageIn[i]>>8;*/
+
+    printf("ImageIn: %d %d %d %d\n",ImageIn[0],ImageIn[1],ImageIn[2],ImageIn[3]);
 
 
     ResOut = (short int *) pi_l2_malloc(12 * sizeof(short int));
@@ -127,7 +132,6 @@ void test_kws(void)
         printf("Failed to allocate Memory for Result (%d bytes)\n", 10*sizeof(short int));
         pmsis_exit(-3);
     }
- 
     
     /* Configure And open cluster. */
     struct pi_device cluster_dev;
@@ -153,19 +157,23 @@ void test_kws(void)
     task.entry = Runkws;
     task.arg = NULL;
     task.stack_size = (unsigned int) STACK_SIZE;
+    task.slave_stack_size = (unsigned int) SLAVE_STACK_SIZE;
 
     pi_cluster_send_task_to_cl(&cluster_dev, &task);
 
-    printf("Closing Cluster\n");
+    
     kwsCNN_Destruct();
+    
     // Close the cluster
+    printf("Closing Cluster\n");
     pi_cluster_close(&cluster_dev);
 
     //Checki Results
     int rec_digit = -1;
     short int highest = 0x80000000;
     for(int i = 0; i < 12; i++) {
-        printf("%d ",ResOut[i]);
+        printf("%f ",FIX2FP(ResOut[i],15));
+        printf("%d \n",ResOut[i]);
         if(ResOut[i] > highest) {
 	       highest = ResOut[i];
 	       rec_digit = i;
@@ -174,9 +182,6 @@ void test_kws(void)
     printf("\n");
 
     printf("Recognized: %s\n", labels[rec_digit]);
-
-	 
-    
 
     #if defined(PERF)
     {

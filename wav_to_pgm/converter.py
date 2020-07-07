@@ -32,10 +32,10 @@ for filename in os.listdir(directory_wav):
 
     if not os.path.exists(directory):
         os.makedirs(directory)
+    with open(os.path.join(directory, name+".dat"), 'wb') as f:
+        np.uint16(s_16b).tofile(f)
     with open(os.path.join(directory, name+".pgm"), 'wb') as f:
         hdr =  'P5' + '\n' + str(ncoeff) + '  ' + str(n_win) + '  ' + str(65535) + '\n'
         f.write(hdr.encode())
         np.uint16(s_16b).tofile(f)
-    with open(os.path.join(directory, name+".dat"), 'wb') as f:
-        np.uint16(s_16b).tofile(f)
-
+    
