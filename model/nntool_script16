@@ -1,4 +1,12 @@
+#set debug true
 adjust
 fusions --pow2
-aquant -s POW2 -f 16 images/* -D 1 -O 0 -F int16
+set input_divisor 1
+set input_offset 0
+aquant -s POW2 -f 16 images/*.pgm  -F int16
+set graph_reorder_constant_in true
+set graph_produce_node_names true
+set graph_produce_operinfos true
+set graph_monitor_cycles true
+set graph_const_exec_from_flash true
 save_state
