@@ -9,10 +9,9 @@
 
 #include "pmsis.h"
 
-/* Autotiler includes. */
 #include "Gap.h"
 #include "kwsKernels.h"
-#include "gaplib/ImgIO.h"
+#include <limits.h>
 
 #define STACK_SIZE      2048
 #define SLAVE_STACK_SIZE 1024
@@ -56,7 +55,7 @@ int read_raw_image(char* filename, int16_t* buffer,int w,int h){
 
 
     {
-        char *TargetImg = buffer;
+        char *TargetImg = (char*)buffer;
         unsigned int RemainSize = w*h*sizeof(uint16_t);
         
         while (RemainSize > 0)
@@ -95,7 +94,7 @@ static void Runkws()
 
 void test_kws(void)
 {
-    char *ImageName = "../../../images/up.dat";
+    char *ImageName = "../../../images/go.dat";
 
     printf("Entering main controller\n");
 
@@ -119,12 +118,6 @@ void test_kws(void)
     }
 
     printf("Finished reading image\n");
-/*
-    for(int i=0;i<W*H;i++)
-        ImageIn[i] = ImageIn[i]>>8;*/
-
-    printf("ImageIn: %d %d %d %d\n",ImageIn[0],ImageIn[1],ImageIn[2],ImageIn[3]);
-
 
     ResOut = (short int *) pi_l2_malloc(12 * sizeof(short int));
     if (ResOut == NULL)
@@ -170,18 +163,18 @@ void test_kws(void)
 
     //Checki Results
     int rec_digit = -1;
-    short int highest = 0x80000000;
+    short int highest = SHRT_MIN;
+
     for(int i = 0; i < 12; i++) {
-        printf("%f ",FIX2FP(ResOut[i],15));
-        printf("%d \n",ResOut[i]);
+        //printf("%f ",FIX2FP(ResOut[i],15));
+        //printf("%d \n",ResOut[i]);
         if(ResOut[i] > highest) {
 	       highest = ResOut[i];
 	       rec_digit = i;
         }
     }
-    printf("\n");
 
-    printf("Recognized: %s\n", labels[rec_digit]);
+    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],15));
 
     #if defined(PERF)
     {
@@ -201,7 +194,7 @@ void test_kws(void)
     printf("Ended\n");
 
     int status=-1;
-    if (rec_digit==5) status=0;
+    if (rec_digit==11 && ResOut[rec_digit]==10926) status=0;
     
     pmsis_exit(status);
 }
