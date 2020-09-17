@@ -194,7 +194,7 @@ void test_kws(void)
     printf("Ended\n");
 
     int status=-1;
-    if (rec_digit==11 && ResOut[rec_digit]==10926) status=0;
+    if (rec_digit==11 && ResOut[rec_digit]==10928) status=0;
     
     pmsis_exit(status);
 }
