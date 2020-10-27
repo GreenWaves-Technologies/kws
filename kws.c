@@ -193,8 +193,13 @@ void test_kws(void)
  
     printf("Ended\n");
 
+    0.333435
+
+
     int status=-1;
-    if (rec_digit==11 && ResOut[rec_digit]==10926) status=0;
+    if (rec_digit==11 && FIX2FP(ResOut[rec_digit],15) > 0.30) status=0;
+    //old check was: ResOut[rec_digit]==10926 
+
     else {printf("Output Error %d \n",ResOut[rec_digit]);}
     pmsis_exit(status);
 }
