@@ -8,7 +8,7 @@
  */
 
 #include "pmsis.h"
-
+#include "kwsInfo.h"
 #include "Gap.h"
 #include "kwsKernels.h"
 #include <limits.h>
@@ -166,7 +166,7 @@ void test_kws(void)
     short int highest = SHRT_MIN;
 
     for(int i = 0; i < 12; i++) {
-        //printf("%f ",FIX2FP(ResOut[i],15));
+        //printf("%f ",FIX2FP(ResOut[i],S5_Op_output_1_Q));
         //printf("%d \n",ResOut[i]);
         if(ResOut[i] > highest) {
 	       highest = ResOut[i];
@@ -174,7 +174,7 @@ void test_kws(void)
         }
     }
 
-    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],15));
+    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],S5_Op_output_1_Q));
 
     #if defined(PERF)
     {
