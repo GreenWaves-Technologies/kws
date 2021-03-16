@@ -174,7 +174,7 @@ void test_kws(void)
         }
     }
 
-    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],S5_Op_output_1_Q));
+    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],S12_Op_output_1_Q));
 
     #if defined(PERF)
     {
@@ -194,7 +194,7 @@ void test_kws(void)
     printf("Ended\n");
 
     int status=-1;
-    if (rec_digit==11 && FIX2FP(ResOut[rec_digit],15) > 0.30) status=0;
+    if (rec_digit==11 && FIX2FP(ResOut[rec_digit],S12_Op_output_1_Q) > 0.30) status=0;
     //old check was: ResOut[rec_digit]==10926 
 
     else {printf("Output Error %d \n",ResOut[rec_digit]);}

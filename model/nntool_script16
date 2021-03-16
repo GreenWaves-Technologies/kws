@@ -1,9 +1,10 @@
 set debug true
 adjust
 fusions --pow2
-set input_divisor 255
+set input_divisor 64
 set input_offset 0
-aquant -s POW2 -f 16 images/*.pgm  -F int16
+aquant -s POW2 -f 16 images/*.pgm  -F uint16
+qshow
 set graph_reorder_constant_in true
 set graph_produce_node_names true
 set graph_produce_operinfos true
