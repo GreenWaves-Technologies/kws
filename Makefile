@@ -61,10 +61,10 @@ MODEL_GENFLAGS_EXTRA= -c "model/code_template.c"
 pulpChip = GAP
 PULP_APP = kws2
 
-APP_SRCS += kws.c $(MODEL_SRCS) $(MODEL_LIB_POW2) 
+APP_SRCS += kws.c $(MODEL_SRCS) $(CNN_LIB) 
 
 APP_CFLAGS += -O2 -s -mno-memcpy -fno-tree-loop-distribute-patterns 
-APP_CFLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD) $(MODEL_LIB_INCLUDE_POW2)
+APP_CFLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD) $(CNN_LIB_INCLUDE)
 APP_CFLAGS += -DPERF
 
 #APP_LDFLAGS +=  -lgaplib
