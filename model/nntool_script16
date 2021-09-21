@@ -4,11 +4,14 @@ fusions --pow2
 set input_divisor 64
 set input_offset 0
 aquant -s POW2 -f 16 images/*.pgm  -F uint16
-qshow
+#qshow
 set graph_reorder_constant_in true
 set graph_produce_node_names true
 set graph_produce_operinfos true
 set graph_monitor_cycles true
+set graph_produce_node_cvar_name "kwsLName"
+set graph_produce_operinfos_cvar_name "kwsOperCount"
+set graph_monitor_cvar_name "kwsPerf"
 set graph_const_exec_from_flash true
 ##################################################
 ## These two lines are for dumping NN tensors
