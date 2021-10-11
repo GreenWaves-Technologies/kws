@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 #
 import math
@@ -176,7 +176,7 @@ def main():
             is_training=False,
             print_outputs=False
         )
-        
+
     # load weights/biases from checkpoint
     models.load_variables_from_checkpoint(sess, args.start_checkpoint)
 
@@ -194,11 +194,11 @@ def main():
     tf.summary.scalar('accuracy', evaluation_step)
 
 
-    
+
     #generate test outputs
     set_size = audio_processor.set_size('testing')
     tf.logging.info('set_size=%d', set_size)
- 
+
     batch_size = args.batch_size
     directory = args.directory
     test_fingerprints, test_ground_truth = audio_processor.get_data(
@@ -222,7 +222,7 @@ def main():
             })
 
 
-        
+
     print("expected/predicted")
     print(expected)
     print(predicted)
@@ -237,10 +237,10 @@ def main():
 
         in_feat_int = np.array(98*40)
         in_feat_int = in_feat.astype(int)
-        
+
         format='%d'
         np.savetxt("./data/in_feat_{}_{}.txt".format(img_num,expected[img_num]), in_feat_int, delimiter=", ",newline=",\n", fmt=format)
-   
+
     if print_outputs:
         #outconv1_2D = np.reshape(outconv1,(batch_size*32,79*33))
         outconv1_2D = np.reshape(outconv1,(batch_size*32,39*16))
@@ -254,7 +254,7 @@ def main():
         outconv2_2D = np.reshape(outconv2,(batch_size*32,30*13))
         print("SHAPE WEIGHTS2")
         print(np.shape(weights2))
-        
+
         np.savetxt("./data/outFC.txt",outfc, delimiter=",")
         np.savetxt("./data/outConv1.txt", outconv1_2D, delimiter=",")
         np.savetxt("./data/weights1.txt", first_weights_2D, delimiter=",")
@@ -278,8 +278,8 @@ def main():
             f.write(hdr.encode())
             np.uint16(s_16b).tofile(f)
 
-          
+
     print("finished: test accuracy = %.1f%%" % (test_accuracy*100))
-    
+
 if __name__ == "__main__":
     main()
