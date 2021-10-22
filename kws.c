@@ -154,7 +154,6 @@ void test_kws(void)
 
     pi_cluster_send_task_to_cl(&cluster_dev, &task);
 
-    
     kwsCNN_Destruct();
     
     // Close the cluster
@@ -174,7 +173,7 @@ void test_kws(void)
         }
     }
 
-    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],S11_Op_output_1_Q));
+    printf("Recognized: %s with score: %f\n", labels[rec_digit], FIX2FP(ResOut[rec_digit],kws_Output_1_Q));
 
     #if defined(PERF)
     {
@@ -194,10 +193,10 @@ void test_kws(void)
     printf("Ended\n");
 
     int status=-1;
-    if (rec_digit==11 && FIX2FP(ResOut[rec_digit],S11_Op_output_1_Q) > 0.30) status=0;
+    if (rec_digit==11 && FIX2FP(ResOut[rec_digit],kws_Output_1_Q) > 0.30) status=0;
     //old check was: ResOut[rec_digit]==10926 
 
-    else {printf("Output Error %d \n",ResOut[rec_digit]);}
+    else {printf("Output Error %s %f \n",labels[rec_digit],FIX2FP(ResOut[rec_digit],kws_Output_1_Q));}
     pmsis_exit(status);
 }
 

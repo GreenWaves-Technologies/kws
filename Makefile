@@ -47,7 +47,7 @@ include model_decl.mk
 # FOR ALLOCATED STACKS!
 MODEL_L1_MEMORY=48000
 MODEL_L2_MEMORY=307200
-MODEL_L3_MEMORY=8388608
+MODEL_L3_MEMORY=1000000
 # hram - HyperBus RAM
 # qspiram - Quad SPI RAM
 MODEL_L3_EXEC=hram
@@ -56,14 +56,14 @@ MODEL_L3_EXEC=hram
 MODEL_L3_CONST=hflash
 
 # use a custom template to switch on the performance checking
-MODEL_GENFLAGS_EXTRA= -c "model/code_template.c"
+#MODEL_GENFLAGS_EXTRA= -c "model/code_template.c"
 
 pulpChip = GAP
 PULP_APP = kws2
 
 APP_SRCS += kws.c $(MODEL_SRCS) $(CNN_LIB) 
 
-APP_CFLAGS += -O2 -s -mno-memcpy -fno-tree-loop-distribute-patterns 
+APP_CFLAGS += -O3 -s -mno-memcpy -fno-tree-loop-distribute-patterns 
 APP_CFLAGS += -I. -I./helpers -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(GEN_PATH) -I$(MODEL_BUILD) $(CNN_LIB_INCLUDE)
 APP_CFLAGS += -DPERF
 
