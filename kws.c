@@ -131,6 +131,7 @@ void test_kws(void)
     struct pi_cluster_conf cl_conf;
     pi_cluster_conf_init(&cl_conf);
     cl_conf.id = 0;
+    cl_conf.cc_stack_size = STACK_SIZE;
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
     {
@@ -147,12 +148,9 @@ void test_kws(void)
     }
 
     printf("Call cluster\n");
-    struct pi_cluster_task task = {0};
-    task.entry = Runkws;
-    task.arg = NULL;
-    task.stack_size = (unsigned int) STACK_SIZE;
-    task.slave_stack_size = (unsigned int) SLAVE_STACK_SIZE;
-
+    struct pi_cluster_task task;
+    pi_cluster_task(&task, Runkws, NULL);
+    pi_cluster_task_stacks(&task, NULL, SLAVE_STACK_SIZE);
     pi_cluster_send_task_to_cl(&cluster_dev, &task);
 
     kwsCNN_Destruct();
