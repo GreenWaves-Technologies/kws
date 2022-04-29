@@ -9,7 +9,6 @@
 
 #include "pmsis.h"
 #include "kwsInfo.h"
-#include "Gap.h"
 #include "kwsKernels.h"
 #include <limits.h>
 
