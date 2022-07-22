@@ -9,7 +9,6 @@
 
 #include "pmsis.h"
 #include "kwsInfo.h"
-#include "Gap.h"
 #include "kwsKernels.h"
 #include <limits.h>
 
@@ -46,7 +45,7 @@ int read_raw_image(char* filename, int16_t* buffer,int w,int h){
     pi_fs_conf_init(&conf);
     conf.type = PI_FS_HOST;
     pi_open_from_conf(&fs, &conf);
-    
+
     if (pi_fs_mount(&fs))
         return -2;
 
@@ -57,7 +56,7 @@ int read_raw_image(char* filename, int16_t* buffer,int w,int h){
     {
         char *TargetImg = (char*)buffer;
         unsigned int RemainSize = w*h*sizeof(uint16_t);
-        
+
         while (RemainSize > 0)
         {
             unsigned int Chunk = Min(4096, RemainSize);
@@ -70,7 +69,7 @@ int read_raw_image(char* filename, int16_t* buffer,int w,int h){
 
     pi_fs_close(file);
     pi_fs_unmount(&fs);
-    
+
     printf("Image %s, [W: %d, H: %d], Gray, Size: %d bytes, Loaded sucessfully\n", filename, w, h, ReadSize);
 
     return 0;
@@ -125,11 +124,13 @@ void test_kws(void)
         printf("Failed to allocate Memory for Result (%d bytes)\n", 10*sizeof(short int));
         pmsis_exit(-3);
     }
-    
+
     /* Configure And open cluster. */
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
+    pi_cluster_conf_init(&cl_conf);
     cl_conf.id = 0;
+    cl_conf.cc_stack_size = STACK_SIZE;
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
     {
@@ -144,18 +145,15 @@ void test_kws(void)
         printf("Graph constructor exited with an error\n");
         pmsis_exit(-5);
     }
-    
-    printf("Call cluster\n");
-    struct pi_cluster_task task = {0};
-    task.entry = Runkws;
-    task.arg = NULL;
-    task.stack_size = (unsigned int) STACK_SIZE;
-    task.slave_stack_size = (unsigned int) SLAVE_STACK_SIZE;
 
+    printf("Call cluster\n");
+    struct pi_cluster_task task;
+    pi_cluster_task(&task, Runkws, NULL);
+    pi_cluster_task_stacks(&task, NULL, SLAVE_STACK_SIZE);
     pi_cluster_send_task_to_cl(&cluster_dev, &task);
 
     kwsCNN_Destruct();
-    
+
     // Close the cluster
     printf("Closing Cluster\n");
     pi_cluster_close(&cluster_dev);
@@ -189,12 +187,12 @@ void test_kws(void)
         printf("\n");
     }
     #endif  /* PERF */
- 
+
     printf("Ended\n");
 
     int status=-1;
     if (rec_digit==11 && FIX2FP(ResOut[rec_digit],kws_Output_1_Q) > 0.30) status=0;
-    //old check was: ResOut[rec_digit]==10926 
+    //old check was: ResOut[rec_digit]==10926
 
     else {printf("Output Error %s %f \n",labels[rec_digit],FIX2FP(ResOut[rec_digit],kws_Output_1_Q));}
     pmsis_exit(status);
